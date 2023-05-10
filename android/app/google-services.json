@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "393581520815",
+    "project_id": "mittens-6cb5e",
+    "storage_bucket": "mittens-6cb5e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:393581520815:android:89a6c716c42b0858e8715a",
+        "android_client_info": {
+          "package_name": "com.example.mittens"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "393581520815-0jp5fjs03pq0g2gjfdb93gkf9lkttpoi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnYGcKEIqBOBB8zPr5o0v_Hx0cj5vNhfc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "393581520815-0jp5fjs03pq0g2gjfdb93gkf9lkttpoi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
