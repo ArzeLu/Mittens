@@ -1,16 +1,37 @@
-import '../services/realtime_db.dart';
 import 'package:flutter/material.dart';
-import '../helpers/chat_tiles.dart';
+//relative imports
+import '../helpers/chat_system.dart';
 import '../helpers/textbox.dart';
 
 class Chatroom extends StatefulWidget {
-  const Chatroom({Key? key}) : super(key: key);
-
+  const Chatroom({Key? key, required this.tileMaker}) : super(key: key);
+  final ChatTiles tileMaker;
   @override
   State<Chatroom> createState() => _ChatroomState();
 }
 
 class _ChatroomState extends State<Chatroom> {
+  final TextEditingController _controller = TextEditingController();
+  late final TextBox _textbox;
+  late final ChatTiles _tileMaker;
+  late final ValueNotifier<List<Align>> _messageListNotifier;
+  bool initialized = false;
+
+  @override
+  void initState() {
+    _textbox = TextBox(controller: _controller);
+    _tileMaker = widget.tileMaker;
+    _messageListNotifier = _tileMaker.messageListNotifier;
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,30 +45,22 @@ class _ChatroomState extends State<Chatroom> {
             },
           )),
       body: Container(
-          alignment: Alignment.center, //if the alignment value is not null, then the container will expand to fill its parent
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
           child: (Stack(alignment: AlignmentDirectional.topCenter, children: [
-            StreamBuilder(
-                initialData: null,
-                stream: Database.database
-                    .child("chatroom")
-                    .orderByKey()
-                    .limitToLast(1)
-                    .onValue,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    //this is the only way I found that can actually cast
-                    //without compiler or runtime screaming at me
-                    final Map rawData = (snapshot.data!).snapshot.value as Map;
-                    final casted = rawData.cast<String, String>();
-                    String? msg = casted['message'];
-                    return Text(msg!);
-                  }
-                  return const Text("nah no data bro");
+            ValueListenableBuilder(
+                valueListenable: _messageListNotifier,
+                builder: (context, list, _) {
+                  return ListView.builder(
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        return list[index];
+                      });
                 }),
             Positioned(
               bottom: 0,
               width: MediaQuery.of(context).size.width,
-              child: const TextBox(),
+              child: _textbox,
             )
           ]))),
     );

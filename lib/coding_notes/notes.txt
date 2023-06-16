@@ -1,0 +1,5 @@
+** Keyboard pop-ups will cause flutter to rebuild the screen.
+If the screen contains a StreamBuilder type stuff, it will kept being called.
+Pass in the stream itself in the argument to the widget for stateless, or do initState for stateful.
+
+** If you don't want to lose async data, then bind a variable to the async method return value.

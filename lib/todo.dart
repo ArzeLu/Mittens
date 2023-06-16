@@ -4,3 +4,4 @@
 //TODO: check for online storage when retrieving image before declaring that the picture disappeared
 //TODO: check for pfp when app starting up
 //TODO: make chatroom theme
+//TODO: check media store permission logic

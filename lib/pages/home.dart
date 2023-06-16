@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+//relative imports
 import '../services/authentication.dart';
 import '../services/media_store.dart';
 import '../services/file_system.dart';
-import 'dart:io';
-import '../services/realtime_db.dart';
+import '../helpers/chat_system.dart';
 import 'chatroom.dart';
+import '../services/realtime_db.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -14,12 +16,23 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final ChatTiles _tileMaker = ChatTiles.instance;
   final Store store = Store();
+  final RTDatabase _db = RTDatabase.instance;
   File? _profilePicture;
 
   void _loadProfilePicture() {
     _profilePicture = store.getImage(fileName: "profile.jpg");
-    if (_profilePicture == null) debugPrint("yuh\n");
+  }
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _tileMaker.releaseResources();
+    super.dispose();
   }
 
   @override
@@ -54,25 +67,17 @@ class _HomeState extends State<Home> {
                   },
                   child: const Text("delete cache")),
               TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _loadProfilePicture();
-                    });
-                  },
-                  child: const Text("set state bich")),
-              TextButton(
-                  onPressed: () {
-                    Database().sendMessage("hello");
-                  },
-                  child: const Text("Send Text Test")),
-              TextButton(
                 onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => Chatroom()));
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => Chatroom(tileMaker: _tileMaker)));
                 },
                 child: const Text("open chat room"),
+              ),
+              TextButton(
+                onPressed: (){
+                  _db.sendMessage("hello");
+                },
+                child: const Text("sends example text: hello"),
               ),
               _profilePicture != null
                   ? Image.file(_profilePicture!)

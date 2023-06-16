@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mittens/firebase_options.dart';
-import 'services/auth_wrapper.dart';
 import 'package:firebase_core/firebase_core.dart';
+//relative imports
+import 'services/auth_wrapper.dart';
+import 'services/hive_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
