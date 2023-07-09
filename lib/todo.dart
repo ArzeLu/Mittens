@@ -5,3 +5,4 @@
 //TODO: check for pfp when app starting up
 //TODO: make chatroom theme
 //TODO: check media store permission logic
+//TODO: implement correct msg time

@@ -4,5 +4,5 @@ class MessageStruct{
   late String name;
   late String content;
 
-  Message({required this.name, required this.content});
+  MessageStruct({required this.name, required this.content});
 }

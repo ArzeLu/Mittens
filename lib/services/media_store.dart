@@ -3,20 +3,21 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
-//relative imports
-import 'file_system.dart';
-import 'perms.dart';
-import 'cloud_storage.dart';
 
-class Store {
+//relative imports
+import 'local_file_system.dart';
+import 'perms.dart';
+import 'cloud_bucket.dart';
+
+class MStore { //not using MediaStore as the name to avoid complications with the media_store_plus plugin
   //Media store is not the official api; from media_store_plus on pub.dev
   final MediaStore _store = MediaStore();
-  final CloudStorage _storage = CloudStorage();
+  final CloudBucket _storage = CloudBucket();
   final ImagePicker _imagePicker = ImagePicker();
-  final FileSystem _fileSystem = FileSystem();
+  final LocalFileSystem _fileSystem = LocalFileSystem();
   final Perms _permsHandler = Perms();
 
-  Store() {
+  MStore() {
     //Exception would be thrown if folder name is not set
     MediaStore.appFolder = "Mittens";
   }

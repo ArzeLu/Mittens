@@ -1,34 +1,39 @@
 import 'package:flutter/material.dart';
+
 //relative imports
 import '../helpers/chat_system.dart';
-import '../helpers/textbox.dart';
+import '../services/realtime_db.dart';
 
 class Chatroom extends StatefulWidget {
   const Chatroom({Key? key, required this.tileMaker}) : super(key: key);
   final ChatTiles tileMaker;
+
   @override
   State<Chatroom> createState() => _ChatroomState();
 }
 
 class _ChatroomState extends State<Chatroom> {
-  final TextEditingController _controller = TextEditingController();
-  late final TextBox _textbox;
-  late final ChatTiles _tileMaker;
+  final RTDatabase rtDatabase = RTDatabase.instance;
+  final ScrollController _scrollController = ScrollController();
+
+  //Disposables
+  final TextEditingController _textController = TextEditingController();
+  late final ChatTiles _tileMaker; //Disposed in home.dart
   late final ValueNotifier<List<Align>> _messageListNotifier;
   bool initialized = false;
 
   @override
   void initState() {
-    _textbox = TextBox(controller: _controller);
+    super.initState();
     _tileMaker = widget.tileMaker;
     _messageListNotifier = _tileMaker.messageListNotifier;
-    super.initState();
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
-    _controller.dispose();
+    _textController.dispose();
+    _tileMaker.dispose();
     super.dispose();
   }
 
@@ -44,25 +49,47 @@ class _ChatroomState extends State<Chatroom> {
               Navigator.pop(context);
             },
           )),
-      body: Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: (Stack(alignment: AlignmentDirectional.topCenter, children: [
-            ValueListenableBuilder(
-                valueListenable: _messageListNotifier,
-                builder: (context, list, _) {
-                  return ListView.builder(
-                      itemCount: list.length,
-                      itemBuilder: (context, index) {
-                        return list[index];
-                      });
-                }),
-            Positioned(
-              bottom: 0,
-              width: MediaQuery.of(context).size.width,
-              child: _textbox,
-            )
-          ]))),
+      body: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          //set this so that the chatroom itself will not move up and down due to the nature of SingleChildScrollView
+          reverse: true,
+          //align to the bottom so the textbox appears pinned underneath
+          child: Column(children: [
+            SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: ValueListenableBuilder(
+                    valueListenable: _messageListNotifier,
+                    builder: (context, list, _) {
+                      return ListView.builder(
+                          controller: _scrollController,
+                          reverse: true, //the list is built like a reversed stack, setting this to true allows the list to grow from bottom
+                          shrinkWrap: true,
+                          itemCount: list.length,
+                          itemBuilder: (context, index) {
+                            return list[index];
+                          });
+                    })),
+            Container(
+                height: 70,
+                color: Colors.blue,
+                width: MediaQuery.of(context).size.width,
+                child: Row(children: [
+                  Expanded(
+                      child: TextField(
+                    controller: _textController,
+                    decoration:
+                        const InputDecoration(border: OutlineInputBorder()),
+                    maxLines: null,
+                  )),
+                  IconButton(
+                      iconSize: 20,
+                      onPressed: () {
+                        rtDatabase.sendMessage(_textController.text);
+                        _textController.clear();
+                      },
+                      icon: const Icon(Icons.send))
+                ]))
+          ])),
     );
   }
 }

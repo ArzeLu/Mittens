@@ -1,7 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
-class CloudStorage{
+class CloudBucket{
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   UploadTask storeFile({required String path, required File file}){
