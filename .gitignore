@@ -1,6 +1,5 @@
-# Personal
-secret_keys.txt
-
+# Confidentials
+ios/*
 
 # Miscellaneous
 *.class

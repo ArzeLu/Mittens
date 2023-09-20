@@ -13,20 +13,29 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  bool ifRoomBound =
-      hive.roomID.get("id") == null; //if the user has created or joined a room
+  bool isRoomBound =
+      hive.roomID.get("roomID") != null; //if the user has created or joined a room
+
+  String something = "something";
+
+  void roomBinding() {
+    setState(() {
+      isRoomBound = true;
+      something = hive.roomID.get("roomID");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(),
+      appBar: AppBar(title: Text(something)),
 
       //display home if user is already in a room
-      body: ifRoomBound ? const RoomSetUp() : const HomePage(),
+      body: isRoomBound ? const HomePage() : RoomSetUp(() => roomBinding()),
 
       //navigator bar. if the user isn't in a room yet, then don't display it
-      bottomNavigationBar: ifRoomBound
+      bottomNavigationBar: isRoomBound
           ? BottomNavigationBar(items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(
                   icon: Icon(Icons.home),
