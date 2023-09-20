@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 //relative imports
 import '../structures/message_structure.dart';
 
@@ -7,11 +8,17 @@ import '../structures/message_structure.dart';
 //Extend HiveObject to access the save() and delete() methods
 class HiveStorage extends HiveObject{
   late final Box messageBox;
+  late final Box roomID;
   List<String> boxNames = ["messages"];
   HiveStorage();
 
+  Future<void> hiveStart() async {
+    await Hive.initFlutter();
+  }
+
   Future<void> openBoxes() async {
     messageBox = await Hive.openBox("messages");
+    roomID = await Hive.openBox("roomID");
   }
 
   Future<void> putMessage(String time, MessageStruct message) async {

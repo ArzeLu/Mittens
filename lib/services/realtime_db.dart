@@ -11,10 +11,12 @@ class RTDatabase {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   late final DatabaseReference _messagesPath;
+  late final DatabaseReference _inviteCodePath = _database.child("invite_codes");
+  late final DatabaseReference _chatRoomID = _database.child("roomIDs");
 
   ///Singleton constructor
   RTDatabase._() {
-    _messagesPath = _database.child("chatroom/messages");
+    _messagesPath = _database.child("chat_rooms/123456/messages"); //User specific (can't have a general instantiation)
   }
 
   RTDatabase();
@@ -24,16 +26,6 @@ class RTDatabase {
   ///Store a message onto firebase realtime db
   ///Map<String name, String message>
   Future<void> sendMessage(String message) async {
-    DateTime now = DateTime.now();
-
-    StringBuffer time = StringBuffer();
-    time.write(now.year);
-    time.write(now.month);
-    time.write(now.day);
-    time.write(now.hour);
-    time.write(now.minute);
-    time.write(now.second);
-
     String id = Authentication().getUserID();
 
     final newMessage = <String, String>{
@@ -42,10 +34,31 @@ class RTDatabase {
     };
 
     try {
-      await _messagesPath.child(time.toString()).set(newMessage);
+      await _messagesPath.child(DateTime.now().millisecondsSinceEpoch.toString()).set(newMessage);
     } catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  ///Checks if a user has created of joined a room
+  Future<bool> checkRoomBound(String userID) async {
+    return await getChatRoomID(userID) != null;
+  }
+
+  ///Get the lover room ID for a particular user
+  Future<String?> getChatRoomID(String userID) async {
+    DatabaseEvent event = await _chatRoomID.child(userID).once();
+    Object? value = event.snapshot.value;
+
+    return null;
+
+    //Map<String, String> map = Map.from(event as Map).cast<String, String>();
+  }
+
+  ///Check if the invite code is a branch in
+  Future<bool> checkInviteCodeExistence(String key) async {
+    DatabaseEvent event = await _inviteCodePath.child(key).once();
+    return event.snapshot.exists;
   }
 
   ///Returns a Stream that listens to one incoming message at a time

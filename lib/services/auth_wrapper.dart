@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../pages/start.dart';
-import '../pages/home.dart';
+import '../pages/start/start.dart';
+import '../pages/home/home.dart';
 import 'authentication.dart';
 
 class AuthWrapper extends StatelessWidget {
@@ -12,7 +12,7 @@ class AuthWrapper extends StatelessWidget {
       if(snapshot.hasData){
         return const Home();
       }else{
-        return const Initialize();
+        return const Start();
       }
     });
   }

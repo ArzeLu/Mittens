@@ -12,20 +12,38 @@ class Generator{
   int capStart = "A".codeUnitAt(0); //65
   int capEnd = "Z".codeUnitAt(0); //90
 
-  Generator(){
+  Generator();
+  Generator._(){
     rand = Random(DateTime.now().millisecondsSinceEpoch);
   }
 
-  String getInviteCode(){
-    while(true) {
-      String generatedLetter = "";
+  ///Automatically sets random seed to current time in milliseconds
+  static final Generator instance = Generator._();
+
+  ///Generate a room code. Checks if room codes exists. O(1) time for checking
+  Future<String> getRoomCode() async {
+    String generatedLetter = "";
+    bool check = true; //check if room code exists
+    while(check) {
       for (int i = 0; i < 5; i++) {
-        int newNum = rand.nextInt(26) + 64;
+        int newNum = rand.nextInt(26) + 65;
         generatedLetter += String.fromCharCode(newNum);
       }
-
+      check = await _database.checkInviteCodeExistence(generatedLetter);
     }
 
-    return 'hi';
+    return generatedLetter;
+  }
+
+  ///Generate an invite code for the mitten<3 room. Checks if invite code exists
+  Future<String> getInviteCode() async {
+    int generatedCode = 0;
+    bool check = true; //check if invite code exists
+    while(check){
+      generatedCode = rand.nextInt(871563) + 182654;
+      check = await _database.checkInviteCodeExistence("$generatedCode");
+    }
+
+    return "$generatedCode";
   }
 }

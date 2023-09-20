@@ -3,12 +3,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import '../services/authentication.dart';
 import '../services/realtime_db.dart';
+import '../main.dart';
 
 ///Handles receiving and sending chat messages
 ///Also wraps the messages into chat tiles.
 class ChatTiles {
   final Authentication _auth = Authentication();
-  final RTDatabase _database = RTDatabase.instance;
 
   ///Grabs past messages if not initialized
   late bool initialized;
@@ -22,25 +22,29 @@ class ChatTiles {
   ChatTiles._() {
     initialized = false;
     messageList = ValueNotifier(List<Align>.empty(growable: true));
-    singleMessageStreamSub = _database.getSingleMessage().listen((event) async {
+
+    //Setting up a stream to listen for each new message here
+    //
+    singleMessageStreamSub = database.getSingleMessage().listen((event) async {
       List<Align> tempList = List.empty(growable: true);
 
       //See https://youtu.be/sXBJZD0fBa4?list=RDCMUCP4bf6IHJJQehibu6ai__cg&t=2019
       //for guidance.
       if (event.snapshot.exists) {
-        tempList = extractMessageData(event);
+        tempList.insert(0, extractSingleMessageData(event));
 
         //Getting the past messages when the user taps into the chatroom
         if (!initialized) {
+          //Casting into compatible map before being able to extract data
           final Map<String, dynamic> map =
               Map.from(event.snapshot.value as Map).cast<String, dynamic>();
           String key = map.keys.first;
+          //Getting past messages to show up on screen using the key obtained from right above
           DatabaseEvent oldEvent =
-              await _database.getMultipleMessages(before: key);
+              await database.getMultipleMessages(before: key);
           if (oldEvent.snapshot.exists) {
-            List<Align> oldList = extractMessageData(oldEvent);
-            oldList.addAll(tempList);
-            tempList = oldList;
+            List<Align> oldList = extractMultipleMessageData(oldEvent);
+            tempList.addAll(oldList);
           }
           initialized = true;
         }
@@ -49,8 +53,8 @@ class ChatTiles {
         //then the notifier won't trigger properly.
         //This is because the reference to the List is the same and
         //I have to create a new variable for the equality operator to detect a difference.
-        messageList.value.addAll(tempList);
-        messageList.value = List.from(messageList.value);
+        tempList.addAll(messageList.value);
+        messageList.value = List.from(tempList);
       }
     });
   }
@@ -96,10 +100,10 @@ class ChatTiles {
   ///No return value because it adds to the messageList directly.
   Future<void> getRecentPastMessages(String before) async {
     List<Align> tempList = List.empty(growable: true);
-    var event = await _database.getMultipleMessages(before: before);
+    var event = await database.getMultipleMessages(before: before);
 
     if (event.snapshot.exists) {
-      tempList = extractMessageData(event);
+      tempList = extractMultipleMessageData(event);
 
       tempList.addAll(messageList.value);
       messageList.value.addAll(tempList);
@@ -107,17 +111,28 @@ class ChatTiles {
     }
   }
 
-  ///Returns a list of compiled messages data as String
+  ///Returns one single JSON message data as String
   ///from the realtime db DatabaseEvent passed in the perimeter
-  List<Align> extractMessageData(DatabaseEvent event) {
-    List<Align> tempList = List.empty(growable: true);
+  Align extractSingleMessageData(DatabaseEvent event){
+    DataSnapshot snapshot = event.snapshot.children.first; //Take only the first entry
+    Map<String, String> map = Map.from(snapshot.value as Map).cast<String, String>();
+    String sender = map["user"]!;
+    String message = map["message"]!;
+    return getMessageTile(sender, message);
+  }
 
-    final map = Map.from(event.snapshot.value as Map);
-    for (var value in map.values) {
-      final data = Map.from(value as Map).cast<String, String>();
-      tempList.insert(0, getMessageTile(data["user"]!, data["message"]!)); //adding new message to the first
+  ///Returns a list of JSON message data as String
+  ///from the realtime db DatabaseEvent passed in the perimeter
+  List<Align> extractMultipleMessageData(DatabaseEvent event) {
+    List<Align> result = List.empty(growable: true);
+
+    for(var snapshot in event.snapshot.children){
+      Map<String, String> map = Map.from(snapshot.value as Map).cast<String, String>();
+      String sender = map["user"]!;
+      String message = map["message"]!;
+      result.insert(0, getMessageTile(sender, message));
     }
 
-    return tempList;
+    return result;
   }
 }

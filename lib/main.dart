@@ -4,12 +4,20 @@ import 'package:firebase_core/firebase_core.dart';
 //relative imports
 import 'services/auth_wrapper.dart';
 import 'services/hive_storage.dart';
+import 'services/realtime_db.dart';
+
+late final RTDatabase database;
+late final HiveStorage hive;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  database = RTDatabase.instance;
+  hive = HiveStorage();
+  await hive.hiveStart();
+  await hive.openBoxes();
   runApp(const Mittens());
 }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 //relative imports
-import '../helpers/chat_system.dart';
-import '../services/realtime_db.dart';
+import '../../helpers/chat_system.dart';
+import '../../services/realtime_db.dart';
 
 class Chatroom extends StatefulWidget {
   const Chatroom({Key? key, required this.tileMaker}) : super(key: key);
