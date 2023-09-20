@@ -1,5 +1,5 @@
 # Confidentials
-/ios/
+/ios/*
 
 # Miscellaneous
 *.class
