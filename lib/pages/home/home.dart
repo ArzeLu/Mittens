@@ -16,12 +16,18 @@ class _HomeState extends State<Home> {
   bool isRoomBound =
       hive.roomID.get("roomID") != null; //if the user has created or joined a room
 
-  String something = "something";
+  Widget selectedPage = const HomePage();
 
   void roomBinding() {
+    Navigator.pop(context); //popping the alertdialog here (from room_setup.dart) bcs of async issues
     setState(() {
       isRoomBound = true;
-      something = hive.roomID.get("roomID");
+    });
+  }
+
+  void selectPage(){
+    setState(() {
+
     });
   }
 
@@ -29,10 +35,10 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(something)),
+      appBar: AppBar(),
 
       //display home if user is already in a room
-      body: isRoomBound ? const HomePage() : RoomSetUp(() => roomBinding()),
+      body: isRoomBound ? selectedPage : RoomSetUp(() => roomBinding()),
 
       //navigator bar. if the user isn't in a room yet, then don't display it
       bottomNavigationBar: isRoomBound

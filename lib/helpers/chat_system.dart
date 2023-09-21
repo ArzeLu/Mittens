@@ -9,6 +9,7 @@ import '../main.dart';
 ///Also wraps the messages into chat tiles.
 class ChatTiles {
   final Authentication _auth = Authentication();
+  final RTDatabase _database = RTDatabase.instance;
 
   ///Grabs past messages if not initialized
   late bool initialized;
@@ -25,7 +26,7 @@ class ChatTiles {
 
     //Setting up a stream to listen for each new message here
     //
-    singleMessageStreamSub = database.getSingleMessage().listen((event) async {
+    singleMessageStreamSub = _database.getSingleMessage().listen((event) async {
       List<Align> tempList = List.empty(growable: true);
 
       //See https://youtu.be/sXBJZD0fBa4?list=RDCMUCP4bf6IHJJQehibu6ai__cg&t=2019
@@ -41,7 +42,7 @@ class ChatTiles {
           String key = map.keys.first;
           //Getting past messages to show up on screen using the key obtained from right above
           DatabaseEvent oldEvent =
-              await database.getMultipleMessages(before: key);
+              await _database.getMultipleMessages(before: key);
           if (oldEvent.snapshot.exists) {
             List<Align> oldList = extractMultipleMessageData(oldEvent);
             tempList.addAll(oldList);
@@ -100,7 +101,7 @@ class ChatTiles {
   ///No return value because it adds to the messageList directly.
   Future<void> getRecentPastMessages(String before) async {
     List<Align> tempList = List.empty(growable: true);
-    var event = await database.getMultipleMessages(before: before);
+    var event = await _database.getMultipleMessages(before: before);
 
     if (event.snapshot.exists) {
       tempList = extractMultipleMessageData(event);
@@ -114,10 +115,19 @@ class ChatTiles {
   ///Returns one single JSON message data as String
   ///from the realtime db DatabaseEvent passed in the perimeter
   Align extractSingleMessageData(DatabaseEvent event){
-    DataSnapshot snapshot = event.snapshot.children.first; //Take only the first entry
-    Map<String, String> map = Map.from(snapshot.value as Map).cast<String, String>();
-    String sender = map["user"]!;
-    String message = map["message"]!;
+    //Take only the first entry
+    //This snapshot is of chat_rooms/roomID/messages/timestamp
+    DataSnapshot snapshot = event.snapshot.children.first;
+
+    //This is the old way of doing it. I found a more efficient way
+    //keeping this as a reference (i did that for the function below too, so glad that i found out this works)
+    //
+    // Map<String, String> map = Map.from(snapshot.value as Map).cast<String, String>();
+    // String sender = map["user"]!;
+    // String message = map["message"]!;
+
+    String sender = snapshot.child("user").value.toString();
+    String message = snapshot.child("message").value.toString();
     return getMessageTile(sender, message);
   }
 
@@ -127,9 +137,8 @@ class ChatTiles {
     List<Align> result = List.empty(growable: true);
 
     for(var snapshot in event.snapshot.children){
-      Map<String, String> map = Map.from(snapshot.value as Map).cast<String, String>();
-      String sender = map["user"]!;
-      String message = map["message"]!;
+      String sender = snapshot.child("user").value.toString();
+      String message = snapshot.child("message").value.toString();
       result.insert(0, getMessageTile(sender, message));
     }
 

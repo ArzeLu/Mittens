@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import "package:flutter/material.dart";
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import '../../services/media_store.dart';
 import '../../services/local_file_system.dart';
 import '../../helpers/chat_system.dart';
 import '../chatroom/chatroom.dart';
+import '../../services/realtime_db.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,6 +20,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ChatTiles _tileMaker = ChatTiles.instance;
   final MStore _store = MStore(); //media_store.dart
+
+  final RTDatabase _database = RTDatabase();
 
   File? _profilePicture;
 
@@ -74,7 +78,13 @@ class _HomePageState extends State<HomePage> {
           ),
           SizedBox(height: 20, child: Text(test)),
           TextButton(
-            onPressed: () {},
+            onPressed: () async {
+              DatabaseEvent event = await _database.leDatabase.child("chat_rooms").child("123456").child("messages").child("1689059065825").once();
+
+              setState(() {
+                test = event.snapshot.child("user").value.toString();
+              });
+            },
             child: const Text("test"),
           ), Row(children: [
             _profilePicture != null

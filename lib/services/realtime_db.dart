@@ -2,26 +2,83 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 //relative imports
 import 'authentication.dart';
-import 'hive_storage.dart';
+import '../main.dart';
 
 //Messages are only sent if there's internet connection.
 //Therefore, this class is reached first before the Hive class
 //upon sending and receiving
 class RTDatabase {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
+  final DatabaseReference leDatabase = FirebaseDatabase.instance.ref();
 
   late final DatabaseReference _messagesPath;
-  late final DatabaseReference _inviteCodePath = _database.child("invite_codes");
-  late final DatabaseReference _chatRoomID = _database.child("roomIDs");
+  late final DatabaseReference _chatRoomID;
+  late final DatabaseReference _inviteCodePath;
+  late final String roomID;
 
   ///Singleton constructor
   RTDatabase._() {
-    _messagesPath = _database.child("chat_rooms/123456/messages"); //User specific (can't have a general instantiation)
+    roomID = hive.roomID.get("roomID");
+    _messagesPath = _database.child("chat_rooms").child(roomID).child("messages"); //User specific (can't have a general instantiation)
+    _chatRoomID = _database.child("chat_rooms").child(roomID);
+    _inviteCodePath = _database.child("invite_codes");
   }
 
   RTDatabase();
 
   static final RTDatabase instance = RTDatabase._();
+
+  //==========================================================================================
+  //================================ Room Set Up Handling ====================================
+  //==========================================================================================
+
+  ///Putting roomID as a new branch into the chat_rooms directory,
+  ///then put the current user id below it.
+  Future<void> storeRoomID() async {
+    String id = Authentication().getUserID();
+    _database.child("chat_rooms").child(hive.roomID.get("roomID")).child("lovers").update({id : true});
+  }
+
+  ///Mark the current roomID as full in realtime database
+  ///The function checkRoomIDAvailability uses it to see if a couple has already occupied the current roomID
+  Future<void> markRoomFull() async {
+    _database.child("chat_rooms").child(hive.roomID.get("roomID")).update({"userCount" : 2});
+  }
+
+  ///Check if a given room id is available:
+  ///if there are already two people occupying the id
+  ///if the id exists and operational
+  Future<bool> checkRoomIDAvailability(String roomID) async {
+    DataSnapshot snapshot = await _database.child("chat_rooms").child(roomID).get();
+
+    //if the room exists
+    if(!snapshot.exists){
+      return false;
+    }
+    //if the room has been occupied by two people (a couple)
+    if(snapshot.child("userCount").value.toString() == "2"){
+      return false;
+    }
+    return true;
+  }
+
+  ///Check if the roomID is a branch in the chat_rooms branch
+  ///In other words, check if it already exists
+  Future<bool> checkRoomIDExistence(String roomID) async {
+    DataSnapshot snapshot = await _database.child("chat_rooms").child(roomID).get();
+    return snapshot.exists;
+  }
+
+  ///Check if the invite code is a branch in the main directory
+  ///This is probably not ever going to be used
+  Future<bool> checkInviteCodeExistence(String key) async {
+    DatabaseEvent event = await _inviteCodePath.child(key).once();
+    return event.snapshot.exists;
+  }
+
+  //==========================================================================================
+  //================================ Chatting data handling ==================================
+  //==========================================================================================
 
   ///Store a message onto firebase realtime db
   ///Map<String name, String message>
@@ -38,27 +95,6 @@ class RTDatabase {
     } catch (e) {
       debugPrint(e.toString());
     }
-  }
-
-  ///Checks if a user has created of joined a room
-  Future<bool> checkRoomBound(String userID) async {
-    return await getChatRoomID(userID) != null;
-  }
-
-  ///Get the lover room ID for a particular user
-  Future<String?> getChatRoomID(String userID) async {
-    DatabaseEvent event = await _chatRoomID.child(userID).once();
-    Object? value = event.snapshot.value;
-
-    return null;
-
-    //Map<String, String> map = Map.from(event as Map).cast<String, String>();
-  }
-
-  ///Check if the invite code is a branch in
-  Future<bool> checkInviteCodeExistence(String key) async {
-    DatabaseEvent event = await _inviteCodePath.child(key).once();
-    return event.snapshot.exists;
   }
 
   ///Returns a Stream that listens to one incoming message at a time

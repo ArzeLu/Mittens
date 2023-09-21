@@ -3,7 +3,7 @@ import 'dart:math';
 import '../services/realtime_db.dart';
 
 class Generator{
-  final RTDatabase _database = RTDatabase.instance;
+  final RTDatabase _database = RTDatabase();
   late final Random rand;
 
   //This is the char index in dart. Dart doesn't have conventional char var type
@@ -29,7 +29,7 @@ class Generator{
         int newNum = rand.nextInt(26) + 65;
         generatedLetter += String.fromCharCode(newNum);
       }
-      check = await _database.checkInviteCodeExistence(generatedLetter);
+      check = await _database.checkRoomIDExistence(generatedLetter);
     }
 
     return generatedLetter;
